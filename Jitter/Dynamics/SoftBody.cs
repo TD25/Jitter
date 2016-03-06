@@ -400,9 +400,9 @@ namespace Jitter.Dynamics
                 }
             }
 
-            EdgeSprings = springs.AsReadOnly();
-            VertexBodies = points.AsReadOnly();
-            Triangles = triangles.AsReadOnly();
+            EdgeSprings = new ReadOnlyCollection<Spring>(springs);
+            VertexBodies = new ReadOnlyCollection<MassPoint>(points);
+            Triangles = new ReadOnlyCollection<Triangle>(triangles);
 
             AddPointsAndSprings(indices, vertices);
 
@@ -446,11 +446,12 @@ namespace Jitter.Dynamics
 
         public SoftBody(List<TriangleVertexIndices> indices, List<JVector> vertices)
         {
-            EdgeSprings = springs.AsReadOnly();
-            VertexBodies = points.AsReadOnly();
+            
+            EdgeSprings = new ReadOnlyCollection<Spring>(springs);
+            VertexBodies = new ReadOnlyCollection<MassPoint>(points);
 
             AddPointsAndSprings(indices, vertices);
-            Triangles = triangles.AsReadOnly();
+            Triangles = new ReadOnlyCollection<Triangle>(triangles);
         }
 
 

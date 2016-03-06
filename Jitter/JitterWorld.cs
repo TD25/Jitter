@@ -504,7 +504,7 @@ namespace Jitter
         private float currentLinearDampFactor = 1.0f;
         private float currentAngularDampFactor = 1.0f;
 
-#if(!WINDOWS_PHONE)
+#if(!WINDOWS_PHONE && !PCL)
         Stopwatch sw = new Stopwatch();
 
         public enum DebugType

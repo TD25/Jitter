@@ -125,17 +125,16 @@ namespace Jitter.Collision
 
             if (body.island != null)
             {
-                System.Diagnostics.Debug.Assert(body.island.islandManager == this,
+                Assert(body.island.islandManager == this,
                     "IslandManager Inconsistency.",
                     "IslandManager doesn't own the Island.");
-
 
                 // the body should now form an island on his own.
                 // thats okay, but since static bodies dont have islands
                 // remove this island.
-                System.Diagnostics.Debug.Assert(body.island.bodies.Count == 1,
-                "IslandManager Inconsistency.",
-                "Removed all connections of a body - body is still in a non single Island.");
+                Assert(body.island.bodies.Count == 1,
+                    "IslandManager Inconsistency.",
+                    "Removed all connections of a body - body is still in a non single Island.");
 
                 body.island.ClearLists();
                 Pool.GiveBack(body.island);
@@ -166,7 +165,7 @@ namespace Jitter.Collision
 
         private void AddConnection(RigidBody body1, RigidBody body2)
         {
-            System.Diagnostics.Debug.Assert(!(body1.isStatic && body2.isStatic),
+            Assert(!(body1.isStatic && body2.isStatic),
                 "IslandManager Inconsistency.",
                 "Arbiter detected between two static objects.");
 
@@ -205,14 +204,14 @@ namespace Jitter.Collision
 
         private void RemoveConnection(RigidBody body1, RigidBody body2)
         {
-            System.Diagnostics.Debug.Assert(!(body1.isStatic && body2.isStatic),
+            Assert(!(body1.isStatic && body2.isStatic),
                 "IslandManager Inconsistency.",
                 "Arbiter detected between two static objects.");
 
             if (body1.isStatic) // <- only body1 is static
             {
                 // if (!body2.connections.Contains(body1)) throw new Exception();
-                //System.Diagnostics.Debug.Assert(body2.connections.Contains(body1),
+                //Assert(body2.connections.Contains(body1),
                 //    "IslandManager Inconsistency.",
                 //    "Missing body in connections.");
 
@@ -220,7 +219,7 @@ namespace Jitter.Collision
             }
             else if (body2 == null || body2.isStatic) // <- only body2 is static
             {
-                //System.Diagnostics.Debug.Assert(body1.connections.Contains(body2),
+                //Assert(body1.connections.Contains(body2),
                 //    "IslandManager Inconsistency.",
                 //    "Missing body in connections.");
 
@@ -228,7 +227,7 @@ namespace Jitter.Collision
             }
             else // <- both are !static
             {
-                System.Diagnostics.Debug.Assert(body1.island == body2.island,
+                Assert(body1.island == body2.island,
                     "IslandManager Inconsistency.",
                     "Removing arbiter with different islands.");
 
@@ -248,7 +247,7 @@ namespace Jitter.Collision
 
         private void SplitIslands(RigidBody body0, RigidBody body1)
         {
-            System.Diagnostics.Debug.Assert(body0.island != null && (body0.island == body1.island),
+            Assert(body0.island != null && (body0.island == body1.island),
                 "Islands not the same or null.");
 
             leftSearchQueue.Enqueue(body0);
@@ -449,8 +448,14 @@ namespace Jitter.Collision
 
         }
 
-
-
+        private void Assert(bool condition, string message, string detailMessage = "")
+        {
+#if (PCL)
+            System.Diagnostics.Debug.Assert(condition);
+#else
+            System.Diagnostics.Debug.Assert(condition, message, detailMessage);
+#endif
+        }
 
     }
 }

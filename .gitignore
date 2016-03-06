@@ -1,5 +1,3 @@
-*.sln
-*.csproj
 bin
 obj
 *.user

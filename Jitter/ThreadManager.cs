@@ -25,6 +25,7 @@ using Jitter.Dynamics;
 using Jitter.LinearMath;
 using Jitter.Collision.Shapes;
 using System.Threading;
+using System.Threading.Tasks;
 #endregion
 
 namespace Jitter
@@ -36,21 +37,12 @@ namespace Jitter
     /// </summary>
     public class ThreadManager
     {
-
         public const int ThreadsPerProcessor = 1;
-
-#if XBOX 
-        private readonly int[] xBoxMap = new int[] { 1, 3, 4, 5 };
-#endif
-
-        private ManualResetEvent waitHandleA, waitHandleB;
-        private ManualResetEvent currentWaitHandle;
 
         volatile List<Action<object>> tasks = new List<Action<object>>();
         volatile List<object> parameters = new List<object>();
 
-        private Thread[] threads;
-        private int currentTaskIndex, waitingThreadCount;
+        private int currentTaskIndex;
 
         internal int threadCount;
 
@@ -81,41 +73,11 @@ namespace Jitter
         private void Initialize()
         {
 
-
-#if XBOX 
-            ThreadCount = xBoxMap.Length;
-#elif WINDOWS_PHONE
+#if WINDOWS_PHONE
             ThreadCount = 2;
 #else
             threadCount = System.Environment.ProcessorCount * ThreadsPerProcessor;
 #endif
-
-            threads = new Thread[threadCount];
-            waitHandleA = new ManualResetEvent(false);
-            waitHandleB = new ManualResetEvent(false);
-
-            currentWaitHandle = waitHandleA;
-
-            AutoResetEvent initWaitHandle = new AutoResetEvent(false);
-
-            for (int i = 1; i < threads.Length; i++)
-            {
-                threads[i] = new Thread(() =>
-                {
-#if XBOX
-					Thread.CurrentThread.SetProcessorAffinity(xBoxMap[i]);
-#endif
-                    initWaitHandle.Set();
-                    ThreadProc();
-                });
-
-                threads[i].IsBackground = true;
-                threads[i].Start();
-                initWaitHandle.WaitOne();
-            }
-
-
-
         }
 
         /// <summary>
@@ -124,16 +86,23 @@ namespace Jitter
         /// </summary>
         public void Execute()
         {
-            currentTaskIndex = 0;
-            waitingThreadCount = 0;
+            if (tasks.Count <= 0)
+                return;
 
-            currentWaitHandle.Set();
+            currentTaskIndex = 0;
+
+            List<Task> threads = new List<Task>();
+            for (int i = 1; i < threadCount && i < tasks.Count; i++)
+            {
+                threads.Add(Task.Run(() =>
+                {
+                    PumpTasks();
+                }));
+            }
+
             PumpTasks();
 
-            while (waitingThreadCount < threads.Length - 1) Thread.Sleep(0);
-
-            currentWaitHandle.Reset();
-            currentWaitHandle = (currentWaitHandle == waitHandleA) ? waitHandleB : waitHandleA;
+            Task.WaitAll(threads.ToArray());
 
             tasks.Clear();
             parameters.Clear();
@@ -150,20 +119,6 @@ namespace Jitter
         {
             tasks.Add(task);
             parameters.Add(param);
-        }
-
-        private void ThreadProc()
-        {
-            while (true)
-            {
-                Interlocked.Increment(ref waitingThreadCount);
-                waitHandleA.WaitOne();
-                PumpTasks();
-
-                Interlocked.Increment(ref waitingThreadCount);
-                waitHandleB.WaitOne();
-                PumpTasks();
-            }
         }
 
         private void PumpTasks()
