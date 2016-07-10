@@ -21,7 +21,7 @@
 // The .NET framework 2.0 doesn't provide a hashset
 // so we fake it here by using the Dictionary object.
 
-#if NET_20 || WINDOWS_PHONE || XBOX
+#if NET_20 //|| WINDOWS_PHONE || XBOX
 
 using System;
 using System.Collections;
